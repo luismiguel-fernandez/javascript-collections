@@ -15,7 +15,14 @@
     document.addEventListener("DOMContentLoaded",main)
 
     function main(){
-        let agenda = []
+        let agenda = [
+            {name: "Víctor", tel: "654321987"},
+            {name: "Luismi", tel: "123456789"},
+            {name: "Miguel", tel: "321654987"},
+            {name: "Rodrigo", tel: "123789456"}
+        ]
+
+        let activeSort = 0
         const insBtn = document.querySelector("#insBtn")
         const sortByNameBtn = document.querySelector("#sortByNameBtn")
         const sortByTelBtn = document.querySelector("#sortByTelBtn")
@@ -25,6 +32,7 @@
         const tbody = document.querySelector("table>tbody")
 
         name.focus()
+        refreshTable()
         name.addEventListener("keyup",function(ev){
             if (ev.key == "Enter") {
                 tel.focus()
@@ -35,15 +43,52 @@
                 insertAndEmptyForm()
             }
         })
+        search.addEventListener("keyup",function(){
+            refreshTable()
+        })
         insBtn.addEventListener("click",function(){
             insertAndEmptyForm()
         })
         sortByNameBtn.addEventListener("click",function(){
             //ordenar agenda por nombre
+            if (activeSort == 1) {
+                activeSort = 3 //ponerlo en orden Z-A
+                sortByNameBtn.textContent = "Z-A"
+            } else {
+                activeSort = 1 //ponerlo en orden A-Z
+                sortByNameBtn.classList.remove("btn-outline-info")
+                sortByNameBtn.classList.add("btn-info")
+                sortByTelBtn.classList.remove("btn-info")
+                sortByTelBtn.classList.add("btn-outline-info")
+                sortByNameBtn.textContent = "A-Z"
+            }
+            refreshTable()
         })
         sortByTelBtn.addEventListener("click",function(){
             //ordenar agenda por nº tel
+            if (activeSort == 2) {
+                activeSort = 4
+                sortByTelBtn.textContent = "9-0"
+            } else {
+                activeSort = 2
+                sortByTelBtn.classList.remove("btn-outline-info")
+                sortByTelBtn.classList.add("btn-info")
+                sortByNameBtn.classList.remove("btn-info")
+                sortByNameBtn.classList.add("btn-outline-info")
+                sortByTelBtn.textContent = "0-9"
+            }
+            refreshTable()
         })
+        function compare(a,b) {
+            //comprobar si el usuario ha elegido algún tipo de ordenación
+            switch (activeSort) {
+                case 0: return 0;
+                case 1: if (a.name<b.name) return -1; else if (a.name>b.name) return 1; else return 0;
+                case 2: if (a.tel<b.tel) return -1; else if (a.tel>b.tel) return 1; else return 0;
+                case 3: if (a.name>b.name) return -1; else if (a.name<b.name) return 1; else return 0;
+                case 4: if (a.tel>b.tel) return -1; else if (a.tel<b.tel) return 1; else return 0;
+            }
+        }
         function insertAndEmptyForm() {
             if (nameOK() && telOK()) {
                 agenda.push({
@@ -69,7 +114,10 @@
             tbody.innerHTML = ""
             //mostrar en el TABLE todos los contactos de nuestra agenda
             let index = 0
-            agenda.forEach(c => {
+            agenda
+              .filter(c => c.name.toLowerCase().includes(search.value.trim().toLowerCase()))
+              .sort(compare)
+              .forEach(c => {
                 //crear una nueva fila y sus celdas en el tbody
                 let newTR = tbody.insertRow()
                 let newTD1 = newTR.insertCell()
@@ -80,11 +128,15 @@
                 newTD2.textContent = c.tel
                 newTD3.innerHTML = "<button class='btn btn-danger'>X</button>"
                 const delBtn = newTD3.querySelector("button")
-                delBtn.dataset.position = index
-                index++
+                //delBtn.dataset.position = index
+                //index++
                 delBtn.addEventListener("click",function(){
                     //borrar dicho elemento del array
-                    agenda.splice(delBtn.dataset.position, 1)
+                    //agenda.splice(delBtn.dataset.position, 1)
+                    let X = newTD1.textContent
+                    let Y = newTD2.textContent
+                    let index = agenda.findIndex(c => c.name == X && c.tel == Y)
+                    agenda.splice(index,1)
                     refreshTable()
                 })
             })
@@ -110,7 +162,7 @@
 
     <div class="row mt-4">
         <div class="input-group mb-3">
-            <input id="search" type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2">
+            <input id="search" type="text" class="form-control" placeholder="Search text" aria-label="Recipient's username" aria-describedby="button-addon2">
             <button class="btn btn-outline-secondary" type="button" id="searchBtn">Search</button>
         </div>
         <table class="table">
@@ -118,10 +170,12 @@
                 <th>
                     NAME
                     <button id="sortByNameBtn" class="btn btn-outline-info">A-Z</button>
+                    <!-- <img id="sortByNameImg" src=""> -->
                 </th>
                 <th>
                     TELEPHONE
                     <button id="sortByTelBtn" class="btn btn-outline-info">0-9</button>
+                    <!-- <img id="sortByTelImg" src=""> -->
                 </th>
                 <th>ACTIONS</th>
             </thead>
@@ -129,7 +183,6 @@
             <tfoot></tfoot>
         </table>
     </div>
-
     </div>
 </body>
 </html>
