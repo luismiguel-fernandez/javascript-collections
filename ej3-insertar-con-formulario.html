@@ -11,16 +11,17 @@
     <!-- JavaScript Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
     <script type="text/javascript">
     document.addEventListener("DOMContentLoaded",main)
 
     function main(){
-        let agenda = [
-            {name: "Víctor", tel: "654321987"},
-            {name: "Luismi", tel: "123456789"},
-            {name: "Miguel", tel: "321654987"},
-            {name: "Rodrigo", tel: "123789456"}
-        ]
+        let agenda = []
+
+        if (localStorage.getItem("agenda")) {
+            agenda = JSON.parse( localStorage.getItem("agenda") )
+        }
 
         let activeSort = 0
         const insBtn = document.querySelector("#insBtn")
@@ -30,6 +31,12 @@
         const tel = document.querySelector("#tel")
         const search = document.querySelector("#search")
         const tbody = document.querySelector("table>tbody")
+
+        const $toast = $("div.toast")
+        const dismissBtn = document.querySelector("div.toast>div>button")
+        dismissBtn.addEventListener("click",function(){
+            $toast.hide()
+        })
 
         name.focus()
         refreshTable()
@@ -95,19 +102,23 @@
                     name: name.value,
                     tel: tel.value
                 })
+                //actualizar el localstorage
+                localStorage.setItem("agenda", JSON.stringify(agenda) )
+
                 refreshTable()
                 name.value = ""
                 tel.value = ""
                 name.focus()
+            } else if (nameOK()) {
+                //es el teléfono el que está mal
+                showToast("El número de teléfono debe estar formado por 9 digitos")
+            } else {
+                //es el nombre el que está mal
+                showToast("El nombre no puede estar vacío")
             }
         }
         function nameOK() {
             return (name.value.trim() != "")
-        }
-        function telOK() {
-            let expreg1 = /^\d{9}$/
-            let expreg2 = /^[0-9]{9}$/
-            return ( expreg1.test(tel.value.trim()) )
         }
         function refreshTable(){
             //vaciar el TBODY
@@ -137,10 +148,23 @@
                     let Y = newTD2.textContent
                     let index = agenda.findIndex(c => c.name == X && c.tel == Y)
                     agenda.splice(index,1)
+                    //actualizar el localstorage
+                    localStorage.setItem("agenda", JSON.stringify(agenda) )
+
                     refreshTable()
                 })
             })
         } //fin función REFRESHTABLE
+        function showToast(message) {
+            document.querySelector("div.toast-body").textContent = message
+            $toast.show()
+            setTimeout( function(){$toast.hide()} , 3000 )
+        }
+        function telOK() {
+            let expreg1 = /^\d{9}$/
+            let expreg2 = /^[0-9]{9}$/
+            return ( expreg1.test(tel.value.trim()) )
+        }
     } //fin función MAIN
     </script>
 </head>
@@ -183,6 +207,21 @@
             <tfoot></tfoot>
         </table>
     </div>
+    </div> <!-- CONTAINER -->
+
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 11" id="toastPlacement">
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+            <img src="..." class="rounded me-2" alt="...">
+            <strong class="me-auto">ERROR</strong>
+            <small></small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+            Hello, world! This is a toast message.
+            </div>
+        </div>
     </div>
+
 </body>
 </html>
